@@ -3,117 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Цаг агаарын мэдээлэл</title>
+    <title>Google Sign-In ба Цаг Агаарын Мэдээлэл</title>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta name="google-signin-client_id" content="603428413306-phi1ad7k0j6og692dt92gaiib380f8m5.apps.googleusercontent.com">
     <style>
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: Arial, sans-serif;
+            text-align: center;
             margin: 0;
             padding: 0;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            max-width: 100%;
             height: 100vh;
-            background-image: url(image.png);
-            background-repeat: no-repeat;
-            background-size: cover;
             background-image: url('image.png');
-            background-repeat: no-repeat;
             background-size: cover;
             background-position: center;
-
         }
 
-        .weather-container {
-            background: linear-gradient(135deg, #ffffff, #d3f4f4);
-            padding: 25px;
-            border-radius: 20px;
-            text-align: center;
-            width: 100%;
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             max-width: 500px;
-            box-shadow: 0px 5px 15px rgba(255, 255, 255, 0.708);
-            transition: transform 0.3s ease;
-        }
-
-        .weather-container:hover {
-            transform: translateY(-10px);
-            box-shadow: 0px 15px 35px rgba(0, 0, 0, 0.2), 0px 5px 10px rgba(0, 0, 0, 0.1);
-            background: linear-gradient(135deg, #ffffff, #5a6fec);
-            box-shadow: 0px 5px 15px rgba(255, 255, 255, 0.708);
+            width: 90%;
         }
 
         h1 {
-            font-size: 45px;
+            color: #333;
             margin-bottom: 20px;
-            color: #e5e226;
-            text-shadow: 2px 2px 4px rgba(18, 18, 71, 0.999);
         }
 
-        p {
-            font-size: 18px;
-            margin: 10px 0;
-            color: #000000;
+        #user-info {
+            margin-top: 20px;
+            display: none;
         }
-        p:hover {
-            font-size: 25px;
-            margin: 10px 0;
-            color: #ffffff;
+
+        #user-info img {
+            border-radius: 50%;
+            margin-top: 10px;
+        }
+
+        .weather-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .description {
+            font-size: 20px;
+            font-weight: bold;
+            text-transform: capitalize;
         }
 
         .temp {
-            font-size: 25px;
+            font-size: 24px;
+            color: #1abc9c;
             margin: 10px 0;
-            color: #1abc9c;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        .description {
-            font-size: 30px;
-            margin-bottom: 15px;
-            font-weight: bold;
-            text-transform: capitalize;
-            color: #1abc9c;
-        }
-
-        .wind, .humidity, .pressure, .visibility {
-            font-size: 16px;
-            color: #000000;
-        }
-
-        @media (max-width: 600px) {
-            .weather-container {
-                padding: 15px;
-                width: 90%;
-            }
-            h1 {
-                font-size: 30px;
-            }
-            .temp {
-                font-size: 19px;
-            }
-            p {
-                font-size: 16px;
-            }
-            .description {
-                font-size: 19px;
-            }
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <h1>Google Нэвтрэлт ба Цаг Агаар</h1>
+        <div class="g-signin2" data-onsuccess="onSignIn"></div>
+        
+        <div id="user-info">
+            <h2>Хэрэглэгчийн мэдээлэл</h2>
+            <p><strong>Нэр:</strong> <span id="name"></span></p>
+            <p><strong>Email:</strong> <span id="email"></span></p>
+            <img id="picture" src="" alt="Profile Picture" width="100" height="100"/>
+        </div>
 
-<div id="weather-container"></div>
+        <div class="weather-container" id="weather-container"></div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const apiKey = '1b976eb71ecd3e076dea88d51195cff2';
-        let city = 'Ulaanbaatar';
-        const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}&lang=mn`;
+        <a href="#" onclick="signOut();">Sign out</a>
+    </div>
 
+    <script>
+        // Google Sign-In амжилттай нэвтэрсэн үед дуудагдах функц
+        function onSignIn(googleUser) {
+            const profile = googleUser.getBasicProfile();
+            document.getElementById('name').textContent = profile.getName();
+            document.getElementById('email').textContent = profile.getEmail();
+            document.getElementById('picture').src = profile.getImageUrl();
+            document.getElementById('user-info').style.display = 'block';
+            
+            // Цаг агаарын мэдээллийг татах
+            fetchWeather();
+        }
+
+        // Цаг агаарын мэдээлэл татах функц
         async function fetchWeather() {
+            const apiKey = '1b976eb71ecd3e076dea88d51195cff2';
+            const city = 'Ulaanbaatar';
+            const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}&lang=mn`;
+
             try {
                 const response = await fetch(apiUrl);
                 if (!response.ok) {
-                    throw new Error('Сервертэй холбогдох үед алдаа гарлаа.');
+                    throw new Error('Цаг агаарын мэдээлэл авахад алдаа гарлаа.');
                 }
                 const data = await response.json();
 
@@ -121,46 +111,43 @@
                 const temp = data.main.temp;
                 const windSpeed = data.wind.speed;
                 const humidity = data.main.humidity;
-                const pressure = data.main.pressure;
-                const visibility = data.visibility;
                 const feelsLike = data.main.feels_like;
-                const precipitation = data.rain ? data.rain['1h'] : data.snow ? data.snow['1h'] : 'Байхгүй';
-                
-                const lat = data.coord.lat;
-                const lon = data.coord.lon;
-                const uvUrl = `https://api.openweathermap.org/data/2.5/uvi?lat=${lat}&lon=${lon}&appid=${apiKey}`;
-                const uvResponse = await fetch(uvUrl);
-                const uvData = await uvResponse.json();
-                const uvIndex = uvData.value;
-
-                const weatherContainer = document.createElement('div');
-                weatherContainer.classList.add('weather-container');
-            
-                const cityTitle = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
 
                 const weatherContent = `
-                    <h1>"${cityTitle}" хотын цаг агаар</h1>
+                    <h2>"${city}" хотын цаг агаар</h2>
                     <p class="description">${weatherDesc}</p>
                     <p class="temp">${temp}°C</p>
                     <p>Мэдрэгдэх температур: ${feelsLike}°C</p>
                     <p>Салхины хурд: ${windSpeed} м/с</p>
                     <p>Чийгшил: ${humidity}%</p>
-                    <p>Даралт: ${pressure} hPa</p>
-                    <p>Харагдах байдал: ${visibility} м</p>
-                    <p>Хур тунадас (1 цаг): ${precipitation} мм</p>
-                    <p>Хэт ягаан туяаны индекс: ${uvIndex}</p>
                 `;
 
-                weatherContainer.innerHTML = weatherContent;
-                document.getElementById('weather-container').appendChild(weatherContainer);
+                document.getElementById('weather-container').innerHTML = weatherContent;
             } catch (error) {
-                document.getElementById('weather-container').innerHTML = `<p>Мэдээлэл татаж чадсангүй. Алдаа: ${error.message}</p>`;
-                console.error('Failed to fetch weather data', error);
+                document.getElementById('weather-container').innerHTML = `<p>${error.message}</p>`;
+                console.error('Алдаа:', error);
             }
         }
 
-        fetchWeather();
-    });
-</script>
+        // Sign out function
+        function signOut() {
+            var auth2 = gapi.auth2.getAuthInstance();
+            auth2.signOut().then(function () {
+                console.log('User signed out.');
+                document.getElementById('user-info').style.display = 'none';
+                document.getElementById('weather-container').innerHTML = '';
+            });
+        }
+
+        // Load the Google API client
+        function loadGoogleAPI() {
+            gapi.load('auth2', function() {
+                gapi.auth2.init();
+            });
+        }
+
+        // Initialize the Google API on page load
+        window.onload = loadGoogleAPI;
+    </script>
 </body>
 </html>
